@@ -234,7 +234,7 @@ NOTE: Macro Installation requires several steps, and is best handled in the orde
   - Panel Icon
     - campfire_panel_icon.png
 
-2. Download a Copy fo the AZM_Lib Macro from the [Audio Zone Manager Repository](https://github.com/ctg-tme/audio-zone-manager-library-macro)
+2. Download a Copy fo the <ins>**AZM_Lib**</ins> Macro from the [Audio Zone Manager Repository](https://github.com/ctg-tme/audio-zone-manager-library-macro)
 
 ### Node Codec Installation
 1. Log into the Node Codec's Web Interface
