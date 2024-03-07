@@ -222,9 +222,8 @@ The challenge that needed solving was to enable speaker tracking in all side of 
 NOTE: Macro Installation requires several steps, and is best handled in the order outlined below.
 
 ### Download Files
-1. Download a copy of the following files from this repository
+1. Download a copy of the following files from repository
   - Macros
-    - AZM_Lib.js
     - Campfire_1_Main.js
     - Campfire_2_Config.js
     - Campfire_3_Initialization.js
@@ -234,6 +233,8 @@ NOTE: Macro Installation requires several steps, and is best handled in the orde
     - Campfire_UserInterface.xml
   - Panel Icon
     - campfire_panel_icon.png
+
+2. Download a Copy fo the AZM_Lib Macro from the [Audio Zone Manager Repository](https://github.com/ctg-tme/audio-zone-manager-library-macro)
 
 ### Node Codec Installation
 1. Log into the Node Codec's Web Interface
