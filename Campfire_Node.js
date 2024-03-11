@@ -75,7 +75,7 @@ const init = {
 
     await startupCommands()
 
-    console.info({ Campfire_Node_Info: 'Initializing Campfire Node...' });
+    console.info({ Campfire_Node_Info: 'Macro Initialization Complete!' });
   }
 }
 

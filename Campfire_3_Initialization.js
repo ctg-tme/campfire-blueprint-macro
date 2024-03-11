@@ -18,10 +18,6 @@ import xapi from 'xapi';
 import { Settings, CodecInfo } from './Campfire_2_Config';
 import { GMM } from './GMM_Lite_Lib';
 
-const DevConfig = {
-  Version: '0-0-1'
-}
-
 /********************************
     [ Prototypes ]
 *********************************/
@@ -75,7 +71,7 @@ const Validate = {};
 /* 
   Ensures all Campfire Macros are installed
 */
-Validate.Macros = async function (version = DevConfig.Version) {
+Validate.Macros = async function () {
   console.log({ Campfire_3_Log: `Checking Installed Macros for Campfire...` })
   const checklist = {
     [`Campfire_1_Main`]: false,

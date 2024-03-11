@@ -11,37 +11,55 @@ writing, software distributed under the License is distributed on an "AS
 IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied.
 *********************************************************
-*
 */
 
 const Settings = {
-  RoomType: 'Campfire Pro',                 // DefaultValue: 'Campfire Pro' || AcceptedValues: <'Campfire Pro'> || Description: Define the RoomType [ NOTE: Future Use ]
-  RoomTypeSettings: {                       // Description: Settings that apply to the Configured Room Type
-    Campfire: {
-      Camera: {
-        UserInterface: {
-          Visibility: 'Auto',               // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show/Hide the Campfire Controls UserInterface
-        },
-        Default_Overview: {
-          Mode: 'Auto',                     // DefaultValue: 'Auto' || AcceptedValues: <'On', 'Off', 'Auto'> || Description: Set a Default Camera view when the room falls silent. On: Applies Composition, Off: Does Nothing, Auto: Use PeopleCount Data to determine the composition
-          Composition: [1, 2, 3, 4],        // DefaultValue: [1, 2, 3, 4] || AcceptedValues: Array || Description: Mode is set to On, set's this array of CameraIds when the room falls silent
-          TransitionTimeout: {
-            OnSilence: 5000                 // DefaultValue: 5000 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
-          }
-        },
-        Mode: {
-          Default: 'Speaker',               // DefaultValue: 'Speaker' || AcceptedValues: <'Speaker', 'Everyone', 'Conversation'> || Description: Set the default Camera Behavior. Speaker: Composes last active camera, Conversation: Composes all Active Audio Zones, Everyone: composes all 4 quadcameras using frames
-          Speaker: {
-            TransitionTimeout: {
-              OnJoin: 2500                  // DefaultValue: 2500 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
-            }
-          },
-          Conversation: {
-            TransitionTimeout: {
-              OnJoin: 20000,                // DefaultValue: 20000 || AcceptedValues: Integer in Milliseconds || Description: Define how long a camera remains in the composition when it first joins the conversation
-              Continue: 15000               // DefaultValue: 15000 || AcceptedValues: Integer in Milliseconds || Description: Define often the camera will continue being composed if the conversation is still active
-            }
-          }
+  UserInterface: {
+    Visibility: 'Auto',               // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show/Hide the Campfire Controls UserInterface
+    PresenterDetected: {
+      Mode: true,
+      Visibility: true
+    }
+  },
+  Camera: {
+    DefaultOverview: {
+      Mode: 'Auto',                     // DefaultValue: 'Auto' || AcceptedValues: <'On', 'Off', 'Auto'> || Description: Set a Default Camera view when the room falls silent. On: Applies Composition, Off: Does Nothing, Auto: Use PeopleCount Data to determine the composition
+      Composition: [1, 2, 3, 4],        // DefaultValue: [1, 2, 3, 4] || AcceptedValues: Array || Description: Mode is set to On, set's this array of CameraIds when the room falls silent
+      TransitionTimeout: {
+        OnSilence: 5000                 // DefaultValue: 5000 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
+      }
+    },
+    PresenterTracking: {
+      DefaultMode: 'Auto'               //Presenter/QuestionAndAnswer/Auto
+    },
+    Mode: {
+      Speaker: {
+        Visibility: 'Auto',
+        TransitionTimeout: {
+          OnJoin: 2500                  // DefaultValue: 2500 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
+        }
+      },
+      Conversation: {
+        Visibility: 'Auto',
+        TransitionTimeout: {
+          OnJoin: 20000,                // DefaultValue: 20000 || AcceptedValues: Integer in Milliseconds || Description: Define how long a camera remains in the composition when it first joins the conversation
+          Continue: 15000               // DefaultValue: 15000 || AcceptedValues: Integer in Milliseconds || Description: Define often the camera will continue being composed if the conversation is still active
+        }
+      },
+      Everyone: {
+        Visibility: 'Auto',
+      },
+      Presenter: {
+        Visibility: 'Auto',
+        TransitionTimeout: {
+          PresenterExit: 5000
+        }
+      },
+      QuestionAndAnswer: {
+        Visibility: 'Auto',
+        TransitionTimeout: {
+          PresenterExit: 5000,
+          OnJoin: 2500                  // DefaultValue: 2500 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
         }
       }
     }
@@ -70,17 +88,17 @@ const CodecInfo = {
       PrimaryCodec_QuadCamera_ConnectorId: '2',        // DefaultValue: 1 || AcceptedValue: Integer || Description: Provide the CameraId configured on the Primary Codec this Node Codec's HDMI output is connected to
       CodecSerialNumber: '0000000000',        // DefaultValue: String || AcceptedValue: String || Description: Provide the Serial Number of the Node Codec
       IpAddress: '10.X.X.X',                  // DefaultValue: String || AcceptedValue: String || Description: Provide the IP Address of the Node Codec
-      Authentication: {           
+      Authentication: {
         Username: 'admin',                    // DefaultValue: String || AcceptedValue: String || Description: If CodecInfo.Authentication.Mode is set to Independent, assign the username for this Node Codec
         Passcode: ''                          // DefaultValue: String || AcceptedValue: String || Description: If CodecInfo.Authentication.Mode is set to Independent, assign the passcode for this Node Codec
       }
     },
     // For the remaining Node Codecs, follow the same format as above
     {
-      Label: 'South',                            
-      PrimaryCodec_QuadCamera_ConnectorId: '3',         
-      CodecSerialNumber: '0000000000',         
-      IpAddress: '10.X.X.X',                  
+      Label: 'South',
+      PrimaryCodec_QuadCamera_ConnectorId: '3',
+      CodecSerialNumber: '0000000000',
+      IpAddress: '10.X.X.X',
       Authentication: { Username: 'admin', Passcode: '' }
     },
     {
