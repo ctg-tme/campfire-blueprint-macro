@@ -15,57 +15,76 @@ or implied.
 
 const Settings = {
   UserInterface: {
-    Visibility: 'Auto',               // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show/Hide the Campfire Controls UserInterface
-    PresenterDetected: {
-      Mode: true,
-      Visibility: true
+    ListPosition: 1,                  // DefaultValue: 1 || AcceptedValues: Integer || Description: Set the position of the Campfire Panel. This does not impact Native UI elements
+    Location: 'HomeScreenAndCallControls',         // DefaultValue: 'HomeScreenAndCallControls' || AcceptedValues: <'HomeScreenAndCallControls', 'HomeScreen', 'CallControls', 'ControlPanel'> || Description: Set the laction of the Campfire panel
+    Visibility: {
+      Panel: 'Auto',                  // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Campfire Controls Panel
+      CameraMode: {
+        Speaker: 'Auto',              // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Speaker Camera Mode
+        Everyone: 'Auto',             // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Everyone Camera Mode
+        Conversation: 'Auto',         // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Conversation Camera Mode
+        Presenter: 'Auto',            // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Presenter Camera Mode
+        QuestionAndAnswer: 'Auto'     // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Question and Answer Camera Mode
+      },
+      PresenterDetector: 'Auto'       // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Presenter Detector Options
     }
   },
   Camera: {
+    DefaultMode: 'Speaker',           // DefaultValue: 'Speaker' || AcceptedValues: <'Speaker', 'Everyone', 'Conversation'> || Description: Set the default Camera Behavior. Speaker: Composes last active camera, Conversation: Composes all Active Audio Zones, Everyone: composes all 4 quadcameras using frames
     DefaultOverview: {
-      Mode: 'Auto',                     // DefaultValue: 'Auto' || AcceptedValues: <'On', 'Off', 'Auto'> || Description: Set a Default Camera view when the room falls silent. On: Applies Composition, Off: Does Nothing, Auto: Use PeopleCount Data to determine the composition
-      Composition: [1, 2, 3, 4],        // DefaultValue: [1, 2, 3, 4] || AcceptedValues: Array || Description: Mode is set to On, set's this array of CameraIds when the room falls silent
+      Mode: 'Manual',                     // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Off', 'Manual'> || Description: Set a Default Camera view when the room falls silent. On: Applies Composition, Off: Does Nothing, Auto: Use PeopleCount Data to determine the composition
+      ManualComposition: [1, 2, 3, 4],// DefaultValue: [1, 2, 3, 4] || AcceptedValues: Array || Description: Mode is set to On, set's this array of CameraIds when the room falls silent
       TransitionTimeout: {
-        OnSilence: 5000                 // DefaultValue: 5000 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
+        OnSilence: 5000               // DefaultValue: 5000 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
       }
     },
-    PresenterTracking: {
-      DefaultMode: 'Auto'               //Presenter/QuestionAndAnswer/Auto
+    MutedOverview: {                  // To-Do: Work not Started
+      Mode: 'Auto',                   // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Off', 'Manual'> || Description:
+      ManualComposition: [1, 2, 3, 4],
+      Position: {
+        Pan: -39,
+        Tilt: -492,
+        Zoom: 8210,
+        Lens: 'Wide'
+      }
+    },
+    PresenterDetector: {              // To-Do: Work not Started
+      Mode: true,                     // DefaultValue: true || AcceptedValues: <true, false> || Description: Enable automatic presenter detection and switch the the PTZ Camera based on the presenter activity status
+      Default: 'Enable',              // DefaultValue: 'Enable' || AcceptedValues: <'Enable', 'Disable'> || Description: Set the default value of Presenter Detector. This will be set on the script first boot and when a call ends
+      DefaultCameraMode: 'Auto',      // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Presenter', 'QuestionAndAnswer'> || Description: Set the default PTZ enabled Camera Mode. Auto will preserve the user's last known mode selected on the touch panel
+      RecoverComposition: 'Auto',
+      TransitionTimeout: {
+        OnJoin: 2500,                 // DefaultValue: 5000 || AcceptedValues: Integer in Milliseconds || Description: Set how long a presenter should be in the Presenter Field before switching to a presenter based camera mode
+        OnExit: 5000                  // DefaultValue: 5000 || AcceptedValues: Integer in Milliseconds || Description: Set how long a presenter should be outside the Presenter Field before disengaging presenter mode and reverting to the last known non-ptz based camera mode
+      }
     },
     Mode: {
       Speaker: {
-        Visibility: 'Auto',
         TransitionTimeout: {
           OnJoin: 2500                  // DefaultValue: 2500 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
         }
       },
       Conversation: {
-        Visibility: 'Auto',
         TransitionTimeout: {
           OnJoin: 20000,                // DefaultValue: 20000 || AcceptedValues: Integer in Milliseconds || Description: Define how long a camera remains in the composition when it first joins the conversation
           Continue: 15000               // DefaultValue: 15000 || AcceptedValues: Integer in Milliseconds || Description: Define often the camera will continue being composed if the conversation is still active
         }
       },
       Everyone: {
-        Visibility: 'Auto',
+        //Future Use
       },
-      Presenter: {
-        Visibility: 'Auto',
-        TransitionTimeout: {
-          PresenterExit: 5000
-        }
+      Presenter: {                      // To-Do
+        //Future Use
       },
-      QuestionAndAnswer: {
-        Visibility: 'Auto',
+      QuestionAndAnswer: {              // To-Do
         TransitionTimeout: {
-          PresenterExit: 5000,
-          OnJoin: 2500                  // DefaultValue: 2500 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
+          OnJoin: 20000,                // DefaultValue: 20000 || AcceptedValues: Integer in Milliseconds || Description: Define how long a camera remains in the composition when it first joins the conversation
+          Continue: 15000               // DefaultValue: 15000 || AcceptedValues: Integer in Milliseconds || Description: Define often the camera will continue being composed if the conversation is still active
         }
       }
     }
   }
 }
-
 
 const CodecInfo = {
   Authentication: {

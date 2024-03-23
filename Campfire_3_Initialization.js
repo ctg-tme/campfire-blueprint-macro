@@ -16,6 +16,7 @@ or implied.
 
 import xapi from 'xapi';
 import { Settings, CodecInfo } from './Campfire_2_Config';
+import { BuildUserInterface } from './Campfire_4_UserInterface';
 import { GMM } from './GMM_Lite_Lib';
 
 /********************************
@@ -58,6 +59,7 @@ Object.prototype.clone = Array.prototype.clone = function () {
     return this;
   }
 }
+
 /********************************
     [ Functions ]
 *********************************/
@@ -74,9 +76,11 @@ const Validate = {};
 Validate.Macros = async function () {
   console.log({ Campfire_3_Log: `Checking Installed Macros for Campfire...` })
   const checklist = {
-    [`Campfire_1_Main`]: false,
-    [`Campfire_2_Config`]: false,
-    [`Campfire_3_Initialization`]: false,
+    "Campfire_1_Main": false,
+    "Campfire_2_Config": false,
+    "Campfire_3_Initialization": false,
+    "Campfire_4_UserInterface": false,
+    "Campfire_5_TextLocalization": false,
     "GMM_Lite_Lib": false,
     "AZM_Lib": false
   }
@@ -85,7 +89,7 @@ Validate.Macros = async function () {
 
   let restartRunTime = false;
 
-  const macros = await xapi.Command.Macros.Macro.Get()
+  const macros = await xapi.Command.Macros.Macro.Get();
 
   for (let mac of macros.Macro) {
     if (arr.includes(mac.Name)) {
@@ -97,36 +101,47 @@ Validate.Macros = async function () {
       }
     }
   }
-  console.log({ Campfire_3_Log: `Campfire Macros Installed!` })
+  console.log({ Campfire_3_Log: `Campfire Macros Installed!` });
 
   for (const key in checklist) {
     if (checklist.hasOwnProperty(key) && checklist[key] !== true) {
       let e = `Macro validation failed: [${key}] macro not found!`
       await disableSolution(e);
       throw new Error(e);
-    }
-  }
+    };
+  };
 
   if (restartRunTime) {
     console.debug({ Campfire_3_Debug: `Restarting Macro Runtime`, Cause: `Imported Macros Active` });
     await xapi.Command.Macros.Runtime.Restart();
-  }
-}
+  };
+};
 
 /* 
   Ensures all Campfire Configurations are set properly
 */
-Validate.Configuration = async function () {
-  console.log({ Campfire_3_Log: `Checking Campfire Configuration...` })
-  console.log({ Campfire_3_Log: `Campfire Configuration Checks Out!` })
+Validate.SettingsObject = async function () {
+  console.log({ Campfire_3_Log: `Checking Campfire Settings Object...` })
+  // To Do
+
+
+  console.log({ Campfire_3_Log: `Campfire Settings Object Checks Out!` })
 }
 
-async function checkVideoInputSignal() {
+Validate.CodecInfoObject = async function () {
+  console.log({ Campfire_3_Log: `Checking Campfire CodecInfo Object...` })
+  // To Do
 
+
+  console.log({ Campfire_3_Log: `Campfire CodecInfo Object Checks Out!` })
 }
 
-async function checkMicrophoneInputConnection() {
+Validate.AudioMapObject = async function () {
+  console.log({ Campfire_3_Log: `Checking Campfire AudioMap Object...` })
+  // To Do
 
+
+  console.log({ Campfire_3_Log: `Campfire Settings AudioMap Checks Out!` })
 }
 
 let Nodes = undefined;
@@ -166,15 +181,24 @@ async function SetupNodeClassConnector() {
   }
 }
 
-
-Validate.RoomScope = async function () {
-  switch (Settings.RoomType) {
-    case 'Campfire Pro':
-
-      break;
-    default:
-      console.warn({ Campfire_3_Warn: `RoomType not defined, unable to validate Room Scope: [${Settings.RoomType}]` })
-      break;
+const SetConfiguration = {
+  CameraInputs: async function () {
+    let logInfo = []
+    if (CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_ConnectorId > 0) {
+      await xapi.Config.Video.Input.Connector[CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_ConnectorId].Name.set(CodecInfo.PrimaryCodec.Label);
+      await xapi.Config.Video.Input.Connector[CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_ConnectorId].InputSourceType.set('camera');
+      await xapi.Config.Video.Input.Connector[CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_ConnectorId].PresentationSelection.set('Manual');
+      await xapi.Config.Video.Input.Connector[CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_ConnectorId].Visibility.set('Never');
+      await xapi.Config.Video.Input.Connector[CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_ConnectorId].CameraControl.Mode.set('On');
+      await xapi.Config.Video.Input.Connector[CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_ConnectorId].CameraControl.CameraId.set(1);
+    }
+    for (const cams of CodecInfo.NodeCodecs) {
+      await xapi.Config.Video.Input.Connector[cams.PrimaryCodec_QuadCamera_ConnectorId].Name.set(cams.Label);
+      await xapi.Config.Video.Input.Connector[cams.PrimaryCodec_QuadCamera_ConnectorId].InputSourceType.set('camera');
+      await xapi.Config.Video.Input.Connector[cams.PrimaryCodec_QuadCamera_ConnectorId].PresentationSelection.set('Manual');
+      await xapi.Config.Video.Input.Connector[cams.PrimaryCodec_QuadCamera_ConnectorId].Visibility.set('Never');
+      await xapi.Config.Video.Input.Connector[cams.PrimaryCodec_QuadCamera_ConnectorId].CameraControl.Mode.set('Off');
+    }
   }
 }
 
@@ -185,7 +209,7 @@ Validate.RoomScope = async function () {
 async function disableSolution(cause, showMessage = true) {
   if (showMessage) {
     await xapi.Command.UserInterface.Message.Alert.Display({
-      Title: `⚠️ [${Settings.RoomType}] Solution Disabled ⚠️`,
+      Title: `⚠️ Campfire Blueprint Disabled ⚠️`,
       Text: cause + '<p>Contact System Admin'
     });
   };
@@ -193,16 +217,17 @@ async function disableSolution(cause, showMessage = true) {
   await xapi.Command.Macros.Macro.Deactivate({ Name: `Campfire_2_Main` });
   await xapi.Command.Macros.Runtime.Restart();
 }
-
 const init = {}
 
 init.Phase1 = async function () {
   console.log({ Campfire_3_Log: `Campfire Phase 1 initializing...` })
 
-  await GMM.memoryInit()
+  await GMM.memoryInit();
 
   await Validate.Macros();
-  await Validate.Configuration();
+  await Validate.SettingsObject();
+  await Validate.CodecInfoObject();
+  await Validate.AudioMapObject();
 
   await init.Phase2()
   return new Promise(resolve => {
@@ -211,18 +236,20 @@ init.Phase1 = async function () {
 }
 
 init.Phase2 = async function () {
-  console.log({ Campfire_3_Log: `Campfire Phase 1 complete, initializing phase 2...` })
-
-  await Validate.RoomScope();
+  console.log({ Campfire_3_Log: `Campfire Phase 1 complete, initializing phase 2...` });
 
   await SetupNodeClassConnector();
 
+  await SetConfiguration.CameraInputs();
+
+  await BuildUserInterface();
+
   return new Promise(resolve => {
-    console.log({ Campfire_3_Log: `Campfire initialization Complete!` })
-    resolve()
-  })
-}
+    console.log({ Campfire_3_Log: `Campfire initialization Complete!` });
+    resolve();
+  });
+};
 
-async function Run_Setup() { await init.Phase1() }
+async function Run_Setup() { await init.Phase1() };
 
-export { Run_Setup, SendToNodes }
+export { Run_Setup, SendToNodes };

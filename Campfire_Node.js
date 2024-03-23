@@ -229,18 +229,30 @@ xapi.Status.Video.Selfview.on(event => {
   }
 })
 
-async function updateNodeLabel(data, primarySerial) {
+async function updateNodeLabel(data, primarySerial, primaryIp) {
   const serial = await xapi.Status.SystemUnit.Hardware.Module.SerialNumber.get()
 
   const findDeviceBySerial = data.find(item => item.CodecSerialNumber === serial);
   const index = data.findIndex(item => item.CodecSerialNumber === serial);
   let label = findDeviceBySerial ? findDeviceBySerial.Label : "";
+  let inputConnector = findDeviceBySerial ? findDeviceBySerial.PrimaryCodec_QuadCamera_ConnectorId : '';
   await xapi.Command.SystemUnit.SignInBanner.Clear()
-  await xapi.Command.SystemUnit.SignInBanner.Set({}, `Campfire Blueprint Installed
-  Label: [${label}] || SystemRole: [Node] || Index: [${index}]
-  Primary Codec Identifier: [${primarySerial}]
+  await xapi.Command.SystemUnit.SignInBanner.Set({}, `Campfire Blueprint Node Macros Installed
   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  Configuration for Campfire must be done through the Primary Codec`);
+  [ ${label} ] serving as custom peripheral any any
+  changes may be overwritten by Primary Codec.
+
+  Configurations for Campfire Blueprint must be done 
+  via the Primary Codec, not here.
+
+  Label: [ ${label} ] || SystemRole: [ Node Codec ]
+  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  - Primary Codec 
+    Identifier: [ ${primarySerial} ] || Video Input: [ ${inputConnector} ]
+    Settings>CodecInfo>NodeCodecs Index: [ ${index} ]
+  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  Should you need support, contact IT/Device Admin or Vendor Partner
+  https://github.com/ctg-tme/campfire-blueprint-macro`);
 }
 
 Run_Setup()

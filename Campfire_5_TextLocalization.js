@@ -27,27 +27,45 @@ const Text = {
           Speaker: {
             Title: `Speaker`,
             Emoji: '👤',
-            Text: `Maintain focus on the active speaker in your room, so your audience doesn't lose sight of them`
+            Description: `Maintain focus on the active speaker in your room, so your audience doesn't lose sight of them`
           },
           Everyone: {
             Title: `Everyone`,
             Emoji: '👥',
-            Text: `Promote Equity in your space, leveraging all 4 cameras and Frames Camera Intelligence`
+            Description: `Promote Equity in your space, leveraging all 4 cameras and Frames Camera Intelligence`
           },
           Conversation: {
             Title: `Conversation`,
             Emoji: '🗣️',
-            Text: `Keep the conversations alive, by mixing all cameras with a closeup of each active speaker`
+            Description: `Keep the conversations alive, by mixing all cameras with a closeup of each active speaker`
           },
           Presenter: {
             Title: `Presenter`,
             Emoji: '🧑‍🏫',
-            Text: `Lock onto the stage and follow the Presenter throughout the call`
+            Description: `Lock onto the stage and follow the Presenter throughout the call`
           },
           QuestionAndAnswer: {
-            Title: `Question And Answer`,
-            Emoji: '❓ 🙋',
-            Text: `A combination of Speaker and Presenter, keeping focus on the presenter and dynamiclly adding speakers sitting around the campfire`
+            Title: `Question &amp; Answer`,
+            Emoji: '❓',
+            Description: `A combination of Speaker and Presenter, keeping focus on the presenter and dynamiclly adding speakers sitting around the campfire`
+          },
+          Off: {
+            Title: `Off`,
+            Emoji: '💤',
+            Description: `Campfire Automation Disabled`
+          }
+        }
+      },
+      Tracking: {
+        Name: 'Tracking',
+        Buttons: {
+          Off: {
+            Title: `Off`,
+            Emoji: '💤'
+          },
+          On: {
+            Title: `On`,
+            Emoji: '💤'
           }
         }
       },
