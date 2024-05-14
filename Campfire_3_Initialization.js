@@ -214,7 +214,7 @@ async function disableSolution(cause, showMessage = true) {
     });
   };
   console.error({ Error: `Unresolvable Error Detected`, Cause: cause, Action: 'Disabling Macro' });
-  await xapi.Command.Macros.Macro.Deactivate({ Name: `Campfire_2_Main` });
+  await xapi.Command.Macros.Macro.Deactivate({ Name: `Campfire_1_Main` });
   await xapi.Command.Macros.Runtime.Restart();
 }
 const init = {}
@@ -223,6 +223,12 @@ init.Phase1 = async function () {
   console.log({ Campfire_3_Log: `Campfire Phase 1 initializing...` })
 
   await GMM.memoryInit();
+
+  let roomType = await xapi.Status.Provisioning.RoomType.get()
+
+  if (roomType.toLowerCase() != 'standard') {
+    await disableSolution(`Invalid Endpoint Config. Provisioning RoomType [${roomType}] conflicts with Campfire Blueprint.`)
+  }
 
   await Validate.Macros();
   await Validate.SettingsObject();
@@ -252,4 +258,4 @@ init.Phase2 = async function () {
 
 async function Run_Setup() { await init.Phase1() };
 
-export { Run_Setup, SendToNodes };
+export { Run_Setup, SendToNodes, disableSolution };

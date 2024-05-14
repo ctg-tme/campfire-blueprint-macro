@@ -14,7 +14,7 @@ or implied.
 *
 */
 import xapi from 'xapi';
-import { Settings } from './Campfire_2_Config';
+import { Settings, CodecInfo, AudioMap } from './Campfire_2_Config';
 import { Text } from './Campfire_5_TextLocalization';
 
 async function BuildUserInterface() {
@@ -39,11 +39,11 @@ async function BuildUserInterface() {
   };
 
   let modesXMLDefinitions = {
-    Speaker: `<Value><Key>Speaker</Key><Name>${Text.Panel.Page.Mode.Buttons.Speaker.Title} ${Text.Panel.Page.Mode.Buttons.Speaker.Emoji}</Name></Value>`,
-    Everyone: `<Value><Key>Everyone</Key><Name>${Text.Panel.Page.Mode.Buttons.Everyone.Title} ${Text.Panel.Page.Mode.Buttons.Everyone.Emoji}</Name></Value>`,
-    Conversation: `<Value><Key>Conversation</Key><Name>${Text.Panel.Page.Mode.Buttons.Conversation.Title} ${Text.Panel.Page.Mode.Buttons.Conversation.Emoji}</Name></Value>`,
-    Presenter: `<Value><Key>Presenter</Key><Name>${Text.Panel.Page.Mode.Buttons.Presenter.Title} ${Text.Panel.Page.Mode.Buttons.Presenter.Emoji}</Name></Value>`,
-    QuestionAndAnswer: `<Value><Key>QuestionAndAnswer</Key><Name>${Text.Panel.Page.Mode.Buttons.QuestionAndAnswer.Title} ${Text.Panel.Page.Mode.Buttons.QuestionAndAnswer.Emoji}</Name></Value>`
+    Speaker: `<Value><Key>Speaker</Key><Name>${Text.CampfireControlsPanel.Page.Mode.Buttons.Speaker.Title} ${Text.CampfireControlsPanel.Page.Mode.Buttons.Speaker.Emoji}</Name></Value>`,
+    Everyone: `<Value><Key>Everyone</Key><Name>${Text.CampfireControlsPanel.Page.Mode.Buttons.Everyone.Title} ${Text.CampfireControlsPanel.Page.Mode.Buttons.Everyone.Emoji}</Name></Value>`,
+    Conversation: `<Value><Key>Conversation</Key><Name>${Text.CampfireControlsPanel.Page.Mode.Buttons.Conversation.Title} ${Text.CampfireControlsPanel.Page.Mode.Buttons.Conversation.Emoji}</Name></Value>`,
+    Presenter: `<Value><Key>Presenter</Key><Name>${Text.CampfireControlsPanel.Page.Mode.Buttons.Presenter.Title} ${Text.CampfireControlsPanel.Page.Mode.Buttons.Presenter.Emoji}</Name></Value>`,
+    QuestionAndAnswer: `<Value><Key>QuestionAndAnswer</Key><Name>${Text.CampfireControlsPanel.Page.Mode.Buttons.QuestionAndAnswer.Title} ${Text.CampfireControlsPanel.Page.Mode.Buttons.QuestionAndAnswer.Emoji}</Name></Value>`
   };
 
   async function formModeGroupButton() {
@@ -65,16 +65,16 @@ async function BuildUserInterface() {
 
     if (xml != '') {
       xml = `<Row>
-            <Name>${Text.Panel.Page.Mode.Name}</Name>
+            <Name>${Text.CampfireControlsPanel.Page.Mode.Name}</Name>
             <Widget>
-              <WidgetId>Campfire~Blueprint~CameraFeatures~Mode</WidgetId>
+              <WidgetId>CampfireBlueprint~CameraFeatures~Mode</WidgetId>
               <Type>GroupButton</Type>
               <Options>size=4;columns=2</Options>
               <ValueSpace>
                 ${xml}
                 <Value>
                   <Key>Off</Key>
-                  <Name>${Text.Panel.Page.Mode.Buttons.Off.Title} ${Text.Panel.Page.Mode.Buttons.Off.Emoji}</Name>
+                  <Name>${Text.CampfireControlsPanel.Page.Mode.Buttons.Off.Title} ${Text.CampfireControlsPanel.Page.Mode.Buttons.Off.Emoji}</Name>
                 </Value>
               </ValueSpace>
             </Widget>
@@ -82,19 +82,19 @@ async function BuildUserInterface() {
     } else {
       console.ingo({ Campfire_4_Info: `Mode XML not populated, bubbling up Tracking Controls` })
       xml = `<Row>
-            <Name>${Text.Panel.Page.Tracking.Name}</Name>
+            <Name>${Text.CampfireControlsPanel.Page.Tracking.Name}</Name>
             <Widget>
-              <WidgetId>Campfire~Blueprint~CameraFeatures~Tracking</WidgetId>
+              <WidgetId>CampfireBlueprint~CameraFeatures~Tracking</WidgetId>
               <Type>GroupButton</Type>
               <Options>size=4;columns=2</Options>
               <ValueSpace>
                 <Value>
                   <Key>Off</Key>
-                  <Name>${Text.Panel.Page.Tracking.Buttons.Off.Title} ${Text.Panel.Page.Tracking.Buttons.Off.Emoji}</Name>
+                  <Name>${Text.CampfireControlsPanel.Page.Tracking.Buttons.Off.Title} ${Text.CampfireControlsPanel.Page.Tracking.Buttons.Off.Emoji}</Name>
                 </Value>
                 <Value>
                   <Key>On</Key>
-                  <Name>${Text.Panel.Page.Tracking.Buttons.On.Title} ${Text.Panel.Page.Tracking.Buttons.On.Emoji}</Name>
+                  <Name>${Text.CampfireControlsPanel.Page.Tracking.Buttons.On.Title} ${Text.CampfireControlsPanel.Page.Tracking.Buttons.On.Emoji}</Name>
                 </Value>
               </ValueSpace>
             </Widget>
@@ -103,34 +103,9 @@ async function BuildUserInterface() {
     return new Promise(resolve => resolve(xml));
   };
 
-  let presenterDetectedRow = `<Row>
-            <Name>${Text.Panel.Page.PresenterDetector.Name}</Name>
-            <Widget>
-              <WidgetId>Campfire~Blueprint~CameraFeatures~PresenterDetector</WidgetId>
-              <Type>GroupButton</Type>
-              <Options>size=4</Options>
-              <ValueSpace>
-                <Value>
-                  <Key>Disable</Key>
-                  <Name>${Text.Panel.Page.PresenterDetector.Buttons.Disable}</Name>
-                </Value>
-                <Value>
-                  <Key>Enable</Key>
-                  <Name>${Text.Panel.Page.PresenterDetector.Buttons.Enable}</Name>
-                </Value>
-              </ValueSpace>
-            </Widget>
-          </Row>`
-
-
-  if (Settings.UserInterface.Visibility.PresenterDetector.toLowerCase() != 'auto') {
-    presenterDetectedRow = '';
-    console.debug({ Campfire_4_Info: `PresenterDetector xml removed`, Cause: 'UserInterface Settings' })
-  }
-
   aboutRowList.forEach((el, i) => {
     aboutRows = aboutRows + `<Row>
-      <Widget><WidgetId>Campfire~Blueprint~About~Row_${i}</WidgetId><Name>${aboutInformation[el]}</Name><Type>Text</Type><Options>size=4;fontSize=small;align=left</Options></Widget>
+      <Widget><WidgetId>CampfireBlueprint~About~Row_${i}</WidgetId><Name>${aboutInformation[el]}</Name><Type>Text</Type><Options>size=4;fontSize=small;align=left</Options></Widget>
     </Row> `
   });
 
@@ -141,25 +116,95 @@ async function BuildUserInterface() {
     console.info({ Campfire_4_Info: `Panel order outside range, letting endpoint apply order xml` })
   }
 
-  let UserInterfaceXML = `<Extensions>
+  let diagZonesRows = `<Row>
+        <Name>Camera Mode State</Name>
+        <Widget>
+          <WidgetId>CampfireBlueprint~Diagnostics~SpeakerLock</WidgetId>
+          <Name>State: Released || ZoneId(s): [] || Mode: ${Settings.Camera.DefaultMode} || Timeout: ${Settings.Camera.Mode[Settings.Camera.DefaultMode].TransitionTimeout.toString()}</Name>
+          <Type>Text</Type>
+          <Options>size=4;fontSize=small;align=left</Options>
+        </Widget>
+      </Row>`
+
+  AudioMap.Zones.forEach((element, index) => {
+    console.error(element)
+
+    diagZonesRows = diagZonesRows + `<Row>
+        <Name>Zone: ${element.Label} [Id: ${index + 1}]</Name>
+        <Widget>
+          <WidgetId>CampfireBlueprint~Diagnostics~AudioZones~${index + 1}</WidgetId>
+          <Name>State: Unset || Type: ${element.MicrophoneAssignment.Type} || CameraConnectorId: ${element.Assets.CameraConnectorId}</Name>
+          <Type>Text</Type>
+          <Options>size=4;fontSize=small;align=left</Options>
+        </Widget>
+      </Row>`
+  })
+
+  let diagCodecRows = `<Row>
+        <Name>Total PeopleCount</Name>
+        <Widget>
+          <WidgetId>CampfireBlueprint~Diagnostics~PeopleCount~Total</WidgetId>
+          <Name>Unset</Name>
+          <Type>Text</Type>
+          <Options>size=4;fontSize=normal;align=left</Options>
+        </Widget>
+      </Row>`
+
+  if (parseInt(CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_ConnectorId) > 0) {
+    diagCodecRows = diagCodecRows + `<Row>
+        <Name>${CodecInfo.PrimaryCodec.Label} [Primary]</Name>
+        <Widget>
+          <WidgetId>CampfireBlueprint~Diagnostics~PeopleCount~Primary</WidgetId>
+          <Name>PeopleCount: Unset</Name>
+          <Type>Text</Type>
+          <Options>size=4;fontSize=normal;align=left</Options>
+        </Widget>
+      </Row>`
+  }
+
+  CodecInfo.NodeCodecs.forEach((element, index) => {
+    diagCodecRows = diagCodecRows + `<Row>
+        <Name>${element.Label} [Node_${index + 1}]</Name>
+        <Widget>
+          <WidgetId>CampfireBlueprint~Diagnostics~PeopleCount~Node_${element.CodecSerialNumber}</WidgetId>
+          <Name>PeopleCount: Unset</Name>
+          <Type>Text</Type>
+          <Options>size=4;fontSize=normal;align=left</Options>
+        </Widget>
+      </Row>`
+  })
+
+  let VisibleXMLPanel = `<Extensions>
       <Panel>
         ${orderLocation}
         <Origin>local</Origin>
         <Location>${Settings.UserInterface.Location}</Location>
         <Icon>Custom</Icon>
-        <Name>${Text.Panel.Name}</Name>
+        <Name>${Text.CampfireControlsPanel.Name}</Name>
+        <ActivityType>Custom</ActivityType>
+        ${Campfire_Icon}
+        </Panel>
+        </Extensions>`
+
+  let HiddenXMLPanel = `<Extensions>
+      <Panel>
+        ${orderLocation}
+        <Origin>local</Origin>
+        <Location>Hidden</Location>
+        <Icon>Custom</Icon>
+        <Name>${Text.CampfireControlsPanel.Name}</Name>
         <ActivityType>Custom</ActivityType>
     ${Campfire_Icon}
         <Page>
-          <Name>${Text.Panel.Page.Name}</Name>
+          <Name>${Text.CampfireControlsPanel.Page.Name}</Name>
           <!--
         Comment: Info Row
       -->
       <Row>
-            <Name>${Text.Panel.Page.Info.Name}</Name>
+            <Name>${Text.CampfireControlsPanel.Page.Info.Name}</Name>
             <Widget>
-              <WidgetId>Campfire~Blueprint~CameraFeatures~Info</WidgetId>
-              <Name>${Text.Panel.Page.Mode.Buttons.Speaker.Title}: ${Text.Panel.Page.Mode.Buttons.Speaker.Text}</Name>
+              <WidgetId>CampfireBlueprint~CameraFeatures~Info</WidgetId>
+              <Name>${Text.CampfireControlsPanel.Page.Mode.Buttons.Speaker.Title}: ${Text.CampfireControlsPanel.Page.Mode.Buttons.Speaker.Text}</Name>
               <Type>Text</Type>
               <Options>size=4;fontSize=normal;align=left</Options>
             </Widget>
@@ -169,38 +214,34 @@ async function BuildUserInterface() {
       -->
           ${await formModeGroupButton()}
           <!--
-        Comment: Presenter Detected Row
-      -->
-      ${presenterDetectedRow}
-          <!--
         Comment: Selfview Row
       -->
       <Row>
-            <Name>${Text.Panel.Page.SelfView.Name}</Name>
+            <Name>${Text.CampfireControlsPanel.Page.SelfView.Name}</Name>
             <Widget>
-              <WidgetId>Campfire~Blueprint~CameraFeatures~SelfviewShowText</WidgetId>
-              <Name>${Text.Panel.Page.SelfView.Buttons.Show}</Name>
+              <WidgetId>CampfireBlueprint~CameraFeatures~SelfviewShowText</WidgetId>
+              <Name>${Text.CampfireControlsPanel.Page.SelfView.Buttons.Show}</Name>
               <Type>Text</Type>
               <Options>size=1;fontSize=small;align=center</Options>
             </Widget>
             <Widget>
-              <WidgetId>Campfire~Blueprint~CameraFeatures~SelfviewShow</WidgetId>
+              <WidgetId>CampfireBlueprint~CameraFeatures~SelfviewShow</WidgetId>
               <Type>ToggleButton</Type>
               <Options>size=1</Options>
             </Widget>
             <Widget>
-              <WidgetId>Campfire~Blueprint~CameraFeatures~SelfviewFullscreenText</WidgetId>
-              <Name>${Text.Panel.Page.SelfView.Buttons.Fullscreen}</Name>
+              <WidgetId>CampfireBlueprint~CameraFeatures~SelfviewFullscreenText</WidgetId>
+              <Name>${Text.CampfireControlsPanel.Page.SelfView.Buttons.Fullscreen}</Name>
               <Type>Text</Type>
               <Options>size=1;fontSize=small;align=center</Options>
             </Widget>
             <Widget>
-              <WidgetId>Campfire~Blueprint~CameraFeatures~SelfviewFullscreen</WidgetId>
+              <WidgetId>CampfireBlueprint~CameraFeatures~SelfviewFullscreen</WidgetId>
               <Type>ToggleButton</Type>
               <Options>size=1</Options>
             </Widget>
           </Row>
-          <PageId>Campfire~Blueprint~CameraFeatures</PageId>
+          <PageId>CampfireBlueprint~CameraFeatures</PageId>
           <Options>hideRowNames=0</Options>
         </Page>
         <Page>
@@ -209,14 +250,86 @@ async function BuildUserInterface() {
           <Options>hideRowNames=1</Options>
         </Page>
       </Panel>
-</Extensions> `;
+  </Extensions> `;
+
+  let DiagnosticXMLPanel = `<Extensions>
+  <Panel>
+    <PanelId>CampfireBlueprint~Diagnostics</PanelId>
+    <Origin>local</Origin>
+    <Location>Hidden</Location>
+    <Icon>Custom</Icon>
+    <Name>Campfire Diagnostics</Name>
+    <ActivityType>Custom</ActivityType>
+    ${Campfire_Icon}
+    <Page>
+      <Name>Cameras</Name>
+      <Row>
+        <Name>Diagnostics(InDev)</Name>
+        <Widget>
+          <WidgetId>CampfireBlueprint~Diagnostics~Cameras~Diagnostics</WidgetId>
+          <Type>GroupButton</Type>
+          <Options>size=4</Options>
+          <ValueSpace>
+            <Value>
+              <Key>off</Key>
+              <Name>Off</Name>
+            </Value>
+            <Value>
+              <Key>speakertrack</Key>
+              <Name>Speakertrack</Name>
+            </Value>
+            <Value>
+              <Key>presentertrack</Key>
+              <Name>PresenterTrack</Name>
+            </Value>
+          </ValueSpace>
+        </Widget>
+      </Row>
+      <Row>
+        <Name>Camera Identifier(InDev)</Name>
+        <Widget>
+          <WidgetId>CampfireBlueprint~Diagnostics~Cameras~CamId</WidgetId>
+          <Type>GroupButton</Type>
+          <Options>size=4</Options>
+          <ValueSpace>
+            <Value>
+              <Key>1</Key>
+              <Name>Hide</Name>
+            </Value>
+            <Value>
+              <Key>2</Key>
+              <Name>Show</Name>
+            </Value>
+          </ValueSpace>
+        </Widget>
+      </Row>
+      <PageId>CampfireBlueprint~Diagnostics~Cameras</PageId>
+      <Options/>
+    </Page>
+    <Page>
+      <Name>Audio Zones</Name>
+      ${diagZonesRows}
+      <PageId>CampfireBlueprint~Diagnostics~AudioZones</PageId>
+      <Options/>
+    </Page>
+    <Page>
+      <Name>PeopleCount</Name>
+      ${diagCodecRows}
+      <PageId>CampfireBlueprint~Diagnostics~PeopleCount</PageId>
+      <Options/>
+    </Page>
+  </Panel>
+</Extensions>
+`
 
   await xapi.Command.UserInterface.Extensions.Panel.Remove({ PanelId: 'Campfire~CampfirePro' }).catch(e => console.debug({ Campfire_4_Debug: 'Unable to remove Legacy Campfire ID', message: e.message }));
   console.debug({ Campfire_4_Debug: 'Legacy Campfire Controls Panel removed' })
 
   return new Promise(async resolve => {
     try {
-      await xapi.Command.UserInterface.Extensions.Panel.Save({ PanelId: 'Campfire~Blueprint' }, UserInterfaceXML);
+      await xapi.Command.UserInterface.Extensions.Panel.Save({ PanelId: 'CampfireBlueprint~Visible' }, VisibleXMLPanel);
+      await xapi.Command.UserInterface.Extensions.Panel.Save({ PanelId: 'CampfireBlueprint~Hidden' }, HiddenXMLPanel);
+      await xapi.Command.UserInterface.Extensions.Panel.Save({ PanelId: 'CampfireBlueprint~Diagnostics' }, DiagnosticXMLPanel)
       console.log({ Campfire_4_Log: 'Userinterface Built!' });
       resolve();
     } catch (e) {

@@ -244,12 +244,12 @@ async function init() {
 
   await StartSubscriptions();
 
-  if (Settings.UserInterface.Visibility.Panel.toLowerCase() == 'hidden') {
+  if (Settings.UserInterface.Visibility.CampfireControls.toLowerCase() == 'hidden') {
     console.debug({ Campfire_1_Debug: `Campfire Panel hidden away` })
-    xapi.Command.UserInterface.Extensions.Panel.Update({ PanelId: 'Campfire~Blueprint', Visibility: 'Hidden' })
+    xapi.Command.UserInterface.Extensions.Panel.Update({ PanelId: 'CampfireBlueprint~Visible', Visibility: 'Hidden' })
     xapi.Command.UserInterface.Extensions.Panel.Close();
   } else {
-    xapi.Command.UserInterface.Extensions.Panel.Update({ PanelId: 'Campfire~Blueprint', Visibility: 'Auto' })
+    xapi.Command.UserInterface.Extensions.Panel.Update({ PanelId: 'CampfireBlueprint~Visible', Visibility: 'Auto' })
   }
 
   //Recover Camera Mode
@@ -346,8 +346,8 @@ async function init() {
   if ((isOnCall || isStreaming) || isSelfViewOn) { await AZM.Command.Zone.Monitor.Start('Initialization'); } else { await AZM.Command.Zone.Monitor.Stop('Initialization'); };
 
   // Check Selfview mode and fullscreen mode, then update the campfire UI extension
-  await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~SelfviewShow', Value: isSelfViewOn == true ? 'On' : 'Off' });
-  await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~SelfviewFullscreen', Value: isSelfviewFull == true ? 'On' : 'Off' });
+  await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~SelfviewShow', Value: isSelfViewOn == true ? 'On' : 'Off' });
+  await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~SelfviewFullscreen', Value: isSelfviewFull == true ? 'On' : 'Off' });
   console.warn({ Campfire_1_Warn: `Campfire Blueprint Initialized!` })
   console.log('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 }
@@ -601,13 +601,15 @@ async function updateCameraMode(mode, cause) {
 
     activeCameraMode = mode;
 
+    updateDiagCameraModeText('Unset', '')
+
     xapi.Command.UserInterface.Message.TextLine.Display({ Text: `Campfire: ${mode.replace(/_/gm, ' ')}`, Duration: 5, X: 10000, Y: 500 })
     if (activeCameraMode != 'Muted') {
-      xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~Info', Value: `${mode.replace(/_/gm, ' ')}: ${cameraModeDescriptions[mode]}` });
+      xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~Info', Value: `${mode.replace(/_/gm, ' ')}: ${cameraModeDescriptions[mode]}` });
       try {
-        await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~Mode', Value: activeCameraMode })
+        await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~Mode', Value: activeCameraMode })
       } catch (e) {
-        await xapi.Command.UserInterface.Extensions.Widget.UnsetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~Mode' })
+        await xapi.Command.UserInterface.Extensions.Widget.UnsetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~Mode' })
         console.warn({ Campfire_1_Warn: `Unable to set mode group button to [${mode}]. This button may be hidden in Campfire_2_Config, is so, please disregard this warning`, Error: e.message })
       }
     }
@@ -679,6 +681,9 @@ const Subscribe = {
   },
   PromptResponse: function () {
     xapi.Event.UserInterface.Message.Prompt.Response.on(Handle.Event.PromptResponse);
+  },
+  RoomType: async function () {
+    xapi.Status.Provisioning.RoomType.on(Handle.Status.RoomType)
   }
 }
 
@@ -693,8 +698,12 @@ const Handle = {
       },
       Conversation: buildAZMBasedTimeoutActivity(),
       Everyone: { active: false },
-      Presenter: {active: false},
+      Presenter: { active: false },
       QuestionAndAnswer: buildAZMBasedTimeoutActivity()
+    },
+    HiddenPanel: {
+      count: 0,
+      run: ''
     }
   },
   Interval: {
@@ -734,7 +743,7 @@ Handle.Event = {
     try {
       if (action.Type == 'released') {
         switch (action.WidgetId) {
-          case 'Campfire~Blueprint~CameraFeatures~Mode':
+          case 'CampfireBlueprint~CameraFeatures~Mode':
             if (activeCameraMode != 'Muted') {
               await updateCameraMode(action.Value, 'Widget Action')
             } else {
@@ -753,10 +762,10 @@ Handle.Event = {
       }
       if (action.Type == 'changed') {
         switch (action.WidgetId) {
-          case 'Campfire~Blueprint~CameraFeatures~SelfviewShow':
+          case 'CampfireBlueprint~CameraFeatures~SelfviewShow':
             await xapi.Command.Video.Selfview.Set({ Mode: action.Value });
             break;
-          case 'Campfire~Blueprint~CameraFeatures~SelfviewFullscreen':
+          case 'CampfireBlueprint~CameraFeatures~SelfviewFullscreen':
             await xapi.Command.Video.Selfview.Set({ FullscreenMode: action.Value });
             break;
         }
@@ -766,12 +775,35 @@ Handle.Event = {
     }
   },
   PanelClicked: async function (event) {
-    try {
-      if (event.PanelId == 'Campfire~Blueprint') {
-        xapi.Command.UserInterface.Extensions.Panel.Open({ PanelId: 'Campfire~Blueprint', PageId: 'Campfire~Blueprint~CameraFeatures' })
+    if (event.PanelId == 'CampfireBlueprint~Visible') {
+      clearTimeout(Handle.Timeout.HiddenPanel.run)
+      Handle.Timeout.HiddenPanel.count++
+      if (Handle.Timeout.HiddenPanel.count >= 3) {
+        if (Settings.Diagnostics.PinProtected.toLowerCase() == 'on') {
+          xapi.Command.UserInterface.Message.TextInput.Display({
+            Title: `Campfire Diagnostics`,
+            Text: 'Campfire Diagnostics is Pin Protected, please enter the pin below.',
+            Duration: 60,
+            Placeholder: 'Enter Pin for Access',
+            InputType: 'Pin',
+            FeedbackId: `campfire~diagnostics~pin~prompt`
+          })
+          Handle.Timeout.HiddenPanel.count = 0
+          return;
+        } else {
+          xapi.Command.UserInterface.Extensions.Panel.Open({ PanelId: 'CampfireBlueprint~Diagnostics' })
+          Handle.Timeout.HiddenPanel.count = 0
+          return;
+        }
       }
-    } catch (e) {
-      Handle.Error(e, 'Handle.Event.WidgetAction', 416)
+      Handle.Timeout.HiddenPanel.run = setTimeout(async () => {
+        try {
+          xapi.Command.UserInterface.Extensions.Panel.Open({ PanelId: 'CampfireBlueprint~Hidden', PageId: 'CampfireBlueprint~CameraFeatures' })
+          Handle.Timeout.HiddenPanel.count = 0
+        } catch (e) {
+          Handle.Error(e, 'Handle.Event.WidgetAction', 780)
+        }
+      }, 250)
     }
   },
   GMM_Receiver: async function (message) {
@@ -794,11 +826,13 @@ Handle.Event = {
     }
   },
   AZM_Zones: async function (zonePayload) {
+    updateDiagAudioZoneText(zonePayload.Zone.State, zonePayload.Zone.Id)
     switch (activeCameraMode.safeToLowerCase()) {
       case 'speaker':
         try {
           //If Speaker the Speaker onJoin timeout is inactive and the Zone is high
           if (!Handle.Timeout.CameraMode.Speaker.active && zonePayload.Zone.State == `High`) {
+            updateDiagCameraModeText('Active', zonePayload.Zone.Id)
             if (lastknownSpeaker_ZoneId != zonePayload.Zone.Id) {
               lastknownSpeaker_ZoneId = zonePayload.Zone.Id.clone()
               console.info({ Campfire_1_Info: `New Speaker Acquired in [${zonePayload.Zone.Label}] Zone || Id: [${zonePayload.Zone.Id}]` })
@@ -816,6 +850,7 @@ Handle.Event = {
             clearTimeout(Handle.Timeout.CameraMode.OnSilence)
             clearInterval(Handle.Interval.OnSilence)
             Handle.Timeout.CameraMode.OnSilence = setTimeout(async function () {
+              updateDiagCameraModeText('Inactive', '')
               console.info({ Campfire_1_Info: `All Zones Quiet, setting defaults` })
               lastknownSpeaker_ZoneId = 0;
               await composeCamera(true, [])
@@ -835,6 +870,7 @@ Handle.Event = {
         }
         break;
       case 'everyone':
+        updateDiagCameraModeText('Active', '')
         if (!Handle.Timeout.CameraMode.Speaker.active) {
           Handle.Timeout.CameraMode.Speaker.active = true;
           clearTimeout(Handle.Timeout.CameraMode.OnSilence)
@@ -856,6 +892,8 @@ Handle.Event = {
             Handle.Timeout.CameraMode.Conversation[zonePayload.Zone.Id].active = true;
             conversationComposition.addCamera(zonePayload.Assets.CameraConnectorId)
 
+            updateDiagCameraModeText('Active', zonePayload.Zone.Id)
+
             //Set the Conversation timeout to false after the onjoin timeout clears
             clearTimeout(Handle.Timeout.CameraMode.OnSilence)
             clearInterval(Handle.Interval.OnSilence)
@@ -868,6 +906,7 @@ Handle.Event = {
                   conversationComposition.removeCamera(zonePayload.Assets.CameraConnectorId)
                   let checkCompArr = conversationComposition.get()
                   if (checkCompArr.length < 1) {
+                    updateDiagCameraModeText('Inactive', '')
                     console.info({ Campfire_1_Info: `All Zones Quiet, setting defaults` })
                     composeCamera(true, [])
                   }
@@ -892,7 +931,7 @@ Handle.Event = {
         }
         break
       case 'presenter':
-
+        updateDiagCameraModeText('Active', '')
         break;
       case 'questionandanswer':
         try {
@@ -902,6 +941,8 @@ Handle.Event = {
             Handle.Timeout.CameraMode.QuestionAndAnswer[zonePayload.Zone.Id].active = true;
             questionAndAnswerComposition.addCamera(zonePayload.Assets.CameraConnectorId);
             questionAndAnswerComposition.shiftToFront(questionAndAnswerComposition.DefaultComposition[0]);
+
+            updateDiagCameraModeText('Active', zonePayload.Zone.Id)
 
             //Set the Question And Answer timeout to false after the onjoin timeout clears
             clearTimeout(Handle.Timeout.CameraMode.OnSilence)
@@ -952,28 +993,86 @@ Handle.Event = {
   }
 }
 
+function updateDiagAudioZoneText(state, id) {
+  const zone = AudioMap.Zones[id - 1].clone()
+  const msg = `State: ${state} || Type: ${zone.MicrophoneAssignment.Type} || CameraConnectorId: ${zone.Assets.CameraConnectorId}`
+
+  xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: `CampfireBlueprint~Diagnostics~AudioZones~${id}`, Value: msg })
+}
+
+function updateDiagCameraModeText(state, zone) {
+  let timeout = 'N/A';
+  if (Settings.Camera.Mode[activeCameraMode]?.TransitionTimeout) {
+    timeout = Settings.Camera.Mode[activeCameraMode].TransitionTimeout.toString()
+  }
+  let activeZones = []
+  let zones = zone
+  if (activeCameraMode == 'Conversation' || activeCameraMode == 'QuestionAndAnswer') {
+    let ids = Object.getOwnPropertyNames(Handle.Timeout.CameraMode[activeCameraMode])
+
+    ids.forEach(element => {
+      if (Handle.Timeout.CameraMode[activeCameraMode][element].active) {
+        activeZones.push(element)
+      }
+    })
+    zones = activeZones.toString()
+  }
+
+  let msg = `State: ${state} || Zone(s): [${zones}] || Mode: ${activeCameraMode} || Timeout: ${timeout}`
+
+  xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: `CampfireBlueprint~Diagnostics~SpeakerLock`, Value: msg })
+}
+
+function updateDiagPeopleCountText(target, value) {
+  switch (target) {
+    case 'Primary':
+
+      break;
+    case 'Total':
+      break;
+    default:
+      break
+  }
+}
+
+/*
+const Handle = {
+  Timeout: {
+    CameraMode: {
+      OnSilence: { run: '' },
+      Speaker: {
+        active: false,
+        run: ''
+      },
+      Conversation: buildAZMBasedTimeoutActivity(),
+      Everyone: { active: false },
+      Presenter: { active: false },
+      QuestionAndAnswer: buildAZMBasedTimeoutActivity()
+    },
+ */
+
 // Status Handler Definitions
 Handle.Status = {
   SelfView: async function (view) {
     try {
       const isOnCall = (await xapi.Status.Call.get()) == '' ? false : true;
       if (view?.Mode) {
-        await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~SelfviewShow', Value: view.Mode });
+        await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~SelfviewShow', Value: view.Mode });
         if (!isOnCall) {
           switch (view.Mode) {
             case 'On':
               await AZM.Command.Zone.Monitor.Start('SelviewMode On Outside Call')
-              await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~SelfviewShow', Value: 'On' });
+              await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~SelfviewShow', Value: 'On' });
               break;
             case 'Off':
               await AZM.Command.Zone.Monitor.Stop('SelviewMode Off Outside Call')
-              await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~SelfviewShow', Value: 'Off' });
+              await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~SelfviewShow', Value: 'Off' });
               break;
           }
         }
       }
       if (view?.FullscreenMode) {
-        await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~Blueprint~CameraFeatures~SelfviewFullscreen', Value: view.FullscreenMode });
+        await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'CampfireBlueprint~CameraFeatures~SelfviewFullscreen', Value: view.FullscreenMode });
       }
     } catch (e) {
       Handle.Error(e, 'Handle.Status.Selfview', 540)
@@ -1029,6 +1128,11 @@ Handle.Status = {
     } else {
       updateCameraMode(previousQuadcameraMode, 'Presenter Left');
       await composeCamera(true, []);
+    }
+  },
+  RoomAnalytics: async function (event) {
+    if (event.toLowerCase() != 'standard') {
+      await disableSolution(`Invalid Endpoint Config. Provisioning RoomType [${event}] conflicts with Campfire Blueprint.`)
     }
   }
 }

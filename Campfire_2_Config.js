@@ -18,16 +18,19 @@ const Settings = {
     ListPosition: 1,                  // DefaultValue: 1 || AcceptedValues: Integer || Description: Set the position of the Campfire Panel. This does not impact Native UI elements
     Location: 'HomeScreenAndCallControls',         // DefaultValue: 'HomeScreenAndCallControls' || AcceptedValues: <'HomeScreenAndCallControls', 'HomeScreen', 'CallControls', 'ControlPanel'> || Description: Set the laction of the Campfire panel
     Visibility: {
-      Panel: 'Auto',                  // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Campfire Controls Panel
+      CampfireControls: 'Auto',                  // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Campfire Controls Panel
       CameraMode: {
         Speaker: 'Auto',              // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Speaker Camera Mode
         Everyone: 'Auto',             // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Everyone Camera Mode
         Conversation: 'Auto',         // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Conversation Camera Mode
         Presenter: 'Auto',            // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Presenter Camera Mode
         QuestionAndAnswer: 'Auto'     // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Question and Answer Camera Mode
-      },
-      PresenterDetector: 'Auto'       // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show or Hide the Presenter Detector Options
+      }
     }
+  },
+  Diagnostics: {
+    PinProtected: 'Off',
+    Pin: '0000'
   },
   Camera: {
     DefaultMode: 'Speaker',           // DefaultValue: 'Speaker' || AcceptedValues: <'Speaker', 'Everyone', 'Conversation'> || Description: Set the default Camera Behavior. Speaker: Composes last active camera, Conversation: Composes all Active Audio Zones, Everyone: composes all 4 quadcameras using frames

@@ -14,7 +14,17 @@ or implied.
 */
 
 const Text = {
-  Panel: {
+  PopUps: {
+    TouchPanel: {
+      MuteNotice: {
+        Title: `Your Microphones are Muted`,
+        Text: `Campfire Modes won't take effect until you Unmute your Microphones.`,
+        Unmute: `Unmute Microphones`,
+        Dismiss: `Dismiss`
+      }
+    }
+  },
+  CampfireControlsPanel: {
     Name: `Campfire Controls`,
     Page: {
       Name: `Campfire Controls`,
@@ -85,15 +95,8 @@ const Text = {
       }
     }
   },
-  PopUps: {
-    TouchPanel: {
-      MuteNotice: {
-        Title: `Your Microphones are Muted`,
-        Text: `Campfire Modes won't take effect until you Unmute your Microphones.`,
-        Unmute: `Unmute Microphones`,
-        Dismiss: `Dismiss`
-      }
-    }
+  CampfireDiagnosticsPanel: {
+
   }
 };
 
