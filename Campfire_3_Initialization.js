@@ -1,5 +1,5 @@
 /********************************************************
-Copyright (c) 2023 Cisco and/or its affiliates.
+Copyright (c) 2025 Cisco and/or its affiliates.
 This software is licensed to you under the terms of the Cisco Sample
 Code License, Version 1.1 (the "License"). You may obtain a copy of the
 License at
@@ -19,7 +19,7 @@ import { Settings, CodecInfo } from './Campfire_2_Config';
 import { GMM } from './GMM_Lite_Lib';
 
 const DevConfig = {
-  Version: '0-0-1'
+  Version: '1-0-1'
 }
 
 /********************************
@@ -66,17 +66,12 @@ Object.prototype.clone = Array.prototype.clone = function () {
     [ Functions ]
 *********************************/
 
-/* 
-  Enables an asynchronous delay in Milliseconds
-*/
-function delay(ms) { return new Promise(resolve => { setTimeout(resolve, ms) }) }
-
 const Validate = {};
 /* 
   Ensures all Campfire Macros are installed
 */
 Validate.Macros = async function (version = DevConfig.Version) {
-  console.log({ Campfire_3_Log: `Checking Installed Macros for Campfire...` })
+  console.log({ Campfire_3_Log: `Checking Installed Macros for Campfire version [${version}]...` });
   const checklist = {
     [`Campfire_1_Main`]: false,
     [`Campfire_2_Config`]: false,

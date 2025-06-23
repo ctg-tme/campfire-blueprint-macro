@@ -1,5 +1,5 @@
 /********************************************************
-Copyright (c) 2023 Cisco and/or its affiliates.
+Copyright (c) 2025 Cisco and/or its affiliates.
 This software is licensed to you under the terms of the Cisco Sample
 Code License, Version 1.1 (the "License"). You may obtain a copy of the
 License at
@@ -24,6 +24,15 @@ let SendToPrimary = '';
 let mutedOverviewPTZPosition = {}
 
 let peopleCountCurrent = 0;
+
+//Performs a soft check to see if the incoming data is a string before evaluating
+String.prototype.safeToLowerCase = function () {
+  if (this && typeof this === 'string') {
+    return this.toLowerCase();
+  } else {
+    return this; // Return the original value if it's not a valid string
+  }
+};
 
 const init = {
   Phase1: async function () {
@@ -133,24 +142,26 @@ function processError(err, context) {
   console.debug({ Campfire_Node_Debug: `Error Ignored as it doesn't apply to this product`, Error: err.message, Context: err.Context })
 }
 
-async function runCameraMode(mode) {
-  switch (mode) {
-    case 'Speaker':
-      await xapi.Command.Cameras.SpeakerTrack.Activate()
-      await xapi.Command.Cameras.SpeakerTrack.Frames.Deactivate()
-      console.info({ Campfire_Node_Info: `Camera Mode changed to [${mode}]` })
+async function setSpeakerTrack(mode) {
+  switch (mode.safeToLowerCase()) {
+    case 'speaker': case 'conversation':
+      await xapi.Command.Cameras.SpeakerTrack.Activate();
+      await xapi.Command.Cameras.SpeakerTrack.Frames.Deactivate();
+      console.info({ Campfire_Node_Info: `Camera Mode changed to [${mode}]` });
       break;
-    case 'Everyone': case 'Conversation':
-      await xapi.Command.Cameras.SpeakerTrack.Activate()
-      await xapi.Command.Cameras.SpeakerTrack.Frames.Activate()
-      console.info({ Campfire_Node_Info: `Camera Mode changed to [${mode}]` })
+    case 'everyone':
+      await xapi.Command.Cameras.SpeakerTrack.Activate();
+      await xapi.Command.Cameras.SpeakerTrack.Frames.Activate();
+      console.info({ Campfire_Node_Info: `Camera Mode changed to [${mode}]` });
       break;
-    case 'Muted':
-      await xapi.Command.Cameras.SpeakerTrack.Deactivate()
-      await xapi.Command.Cameras.SpeakerTrack.Frames.Deactivate()
+    case 'muted':
+      await xapi.Command.Cameras.SpeakerTrack.Deactivate();
+      await xapi.Command.Cameras.SpeakerTrack.Frames.Deactivate();
+      await xapi.Command.Camera.PositionSet(mutedOverviewPTZPosition);
+      console.info({ Campfire_Node_Info: `Camera Mode changed to [${mode}]` });
       break;
     default:
-      console.warn({ Campfire_Node_Warn: `Camera Mode [${mode}] not defined.` })
+      console.warn({ Campfire_Node_Warn: `Camera Mode [${mode}] not defined.` });
       break
   }
 }
@@ -164,7 +175,7 @@ GMM.Event.Receiver.on(async event => {
         payload = JSON.parse(payload)
         if (payload.StandbyStatus.toLowerCase() == 'off') { xapi.Command.Standby.Deactivate(); } else { xapi.Command.Standby.Activate(); };
         updateNodeLabel(payload.RollAssignment, event.Source.Id);
-        runCameraMode(payload.CameraMode);
+        setSpeakerTrack(payload.CameraMode);
         console.log({ Campfire_Node_Log: `Initialization Payload Received`, CameraMode: payload.CameraMode, StandbyStatus: payload.StandbyStatus, RollAssignment: 'Node' });
         saveMutedPTZ(payload.MutedPTZ);
         delete payload.StandbyStatus;
@@ -191,12 +202,7 @@ GMM.Event.Receiver.on(async event => {
         }
         break;
       case 'CameraMode':
-        runCameraMode(event.Value.Data);
-        break;
-      case 'MutedPTZ':
-        if (event.Value.Data == 'Activate') {
-          xapi.Command.Camera.PositionSet(mutedOverviewPTZPosition);
-        }
+        setSpeakerTrack(event.Value.Data);
         break;
     }
   }

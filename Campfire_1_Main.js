@@ -1,5 +1,5 @@
 /********************************************************
-Copyright (c) 2023 Cisco and/or its affiliates.
+Copyright (c) 2025 Cisco and/or its affiliates.
 This software is licensed to you under the terms of the Cisco Sample
 Code License, Version 1.1 (the "License"). You may obtain a copy of the
 License at
@@ -432,12 +432,11 @@ async function runMuteState() {
   clearTimeout(Handle.Timeout.CameraMode.OnSilence)
   clearInterval(Handle.Interval.OnSilence)
   clearCameraAutomationTimeouts();
-  updateCameraMode('Muted', 'Microphones Muted');
-  await SendToNodes('MutedPTZ', 'Activate');
+  await updateCameraMode('Muted', 'Microphones Muted');
   await composeCamera(true, [])
   if (spkState) {
-    await xapi.Command.Cameras.SpeakerTrack.Frames.Activate()
-    await xapi.Command.Cameras.SpeakerTrack.Activate()
+    await xapi.Command.Cameras.SpeakerTrack.Deactivate()
+    await xapi.Command.Cameras.SpeakerTrack.Frames.Deactivate()
     await xapi.Command.Camera.PositionSet(mutedOverviewPTZPosition);
   }
   console.info({ Campfire_1_Info: `Microphones Muted, setting muted overview PTZ position` })
@@ -446,29 +445,24 @@ async function runMuteState() {
 //Used to define the Speakertrack behavior in the Camera Modes
 async function setSpeakerTrack(mode) {
   try {
-    switch (mode) {
-      case 'Speaker':
+    switch (mode.safeToLowerCase()) {
+      case 'speaker': case 'conversation':
         await xapi.Command.Cameras.SpeakerTrack.Activate()
         await xapi.Command.Cameras.SpeakerTrack.Frames.Deactivate()
         console.info({ Campfire_1_Info: `Camera Mode changed to [${mode}]` })
         break;
-      case 'Everyone': case 'Side_By_Side':
+      case 'everyone': case 'side_by_side':
         await xapi.Command.Cameras.SpeakerTrack.Activate()
         await xapi.Command.Cameras.SpeakerTrack.Frames.Activate()
-        console.info({ Campfire_Node_Info: `Camera Mode changed to [${mode}]` })
+        console.info({ Campfire_1_Info: `Camera Mode changed to [${mode}]` })
         break;
-      case 'Conversation':
-        await xapi.Command.Cameras.SpeakerTrack.Activate()
+      case 'muted':
+        await xapi.Command.Cameras.SpeakerTrack.Deactivate()
         await xapi.Command.Cameras.SpeakerTrack.Frames.Deactivate()
-        console.info({ Campfire_Node_Info: `Camera Mode changed to [${mode}]` })
-        break;
-      case 'Muted':
-        await xapi.Command.Cameras.SpeakerTrack.Activate()
-        await xapi.Command.Cameras.SpeakerTrack.Frames.Activate()
-        console.info({ Campfire_Node_Info: `Camera Mode changed to [${mode}]` })
+        console.info({ Campfire_1_Info: `Camera Mode changed to [${mode}]` })
         break;
       default:
-        console.warn({ Campfire_Node_Warn: `Camera Mode [${mode}] not defined.` })
+        console.warn({ Campfire_1_Warn: `Camera Mode [${mode}] not defined.` })
         break
     }
   } catch (e) {
@@ -479,7 +473,7 @@ async function setSpeakerTrack(mode) {
 // Used to updated the Campfire Camera Mode
 async function updateCameraMode(mode, cause) {
   try {
-    clearCameraAutomationTimeouts() //ToDo - Review and Check for Errors
+    clearCameraAutomationTimeouts()
 
     let previous = activeCameraMode.clone()
 
@@ -488,18 +482,23 @@ async function updateCameraMode(mode, cause) {
     }
     activeCameraMode = mode;
 
-    xapi.Command.UserInterface.Message.TextLine.Display({ Text: `Campfire: ${mode.replace(/_/gm, ' ')}`, Duration: 5, X: 10000, Y: 500 })
+    xapi.Command.UserInterface.Message.TextLine.Display({ Text: `Campfire: ${mode.replace(/_/gm, ' ')}`, Duration: 5, X: 10000, Y: 500 });
+
     if (activeCameraMode != 'Muted') {
       xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~CampfirePro~CameraFeatures~Info', Value: `${mode.replace(/_/gm, ' ')}: ${cameraModeDescriptions[mode]}` });
       await xapi.Command.UserInterface.Extensions.Widget.SetValue({ WidgetId: 'Campfire~CampfirePro~CameraFeatures~Mode', Value: activeCameraMode })
     }
-    await setSpeakerTrack(mode) // ToDo - Review and Check for Errors
-    await SendToNodes('CameraMode', activeCameraMode) //ToDo - Review and Check for Errors
+
+    await SendToNodes('CameraMode', activeCameraMode)
+
     if (activeCameraMode != 'Muted') {
       await GMM.write('activeCameraMode', activeCameraMode)
     }
+
+    await setSpeakerTrack(mode);
+
     if (previous != activeCameraMode) {
-      console.log({ Campfire_1_Log: `Camera Mode Updated`, CurrentMode: activeCameraMode, PreviousMode: previous, Cause: cause })
+      console.log({ Campfire_1_Log: `Camera Mode Updated`, CurrentMode: activeCameraMode, PreviousMode: previous, Cause: cause });
     }
   } catch (e) {
     Handle.Error(e, 'updateCameraMode', 249)
