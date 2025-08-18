@@ -21,7 +21,7 @@ export const GMM = {
     MacroName: _main_macro_name()
   },
   DevConfig: {
-    version: '1.9.8 LITE'
+    version: '1.9.9 LITE'
   },
   DevAssets: {
     filterAuthRegex: /[\\]*"Auth[\\]*"\s*:\s*[\\]*"([a-zA-Z0-9\/\+\=\_\-]*)\s*[\\]*"/gm,
@@ -43,7 +43,7 @@ export const GMM = {
         }
       }
     },
-    maxPayloadSize: 1024
+    maxPayloadSize: 8192
   },
   memoryInit: async function () {
     try {
