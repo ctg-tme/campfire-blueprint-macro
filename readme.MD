@@ -18,6 +18,7 @@ The challenge that needed solving was to enable speaker tracking in all side of 
 
 ## Table of Contents
 
+- [What's New](#whats-new-)
 - [Key Terminology](#key-terminology-)
 - [Support Information](#support-information-)
 - [User Guide](#user-guide-)
@@ -33,6 +34,124 @@ The challenge that needed solving was to enable speaker tracking in all side of 
 - [FAQ](#faq-)
 
 > Press on the Menu Icon to come back to the Table of Contents [<img src="/images/view-list-circle_100_w.png" alt="table of contents" width="25"/>](#table-of-contents)
+
+- - -
+
+## What's New [<img src="/images/view-list-circle_100_w.png" alt="table of contents" width="25"/>](#table-of-contents)
+
+### Release 1.0.2
+
+### Changes
+
+#### Campfire_1_Main
+- Added more logging
+- Updated Mode flavor text
+- Added peopleDelay object
+    - This governs the delay on how often the solution will check the current people based composition and composes
+    - This replaced 3 hard codec integers
+- Added Debounce to Mute button automation
+    - muteStateDebounce & muteStateDebounceDelay objects created
+    - muteStateDebounce used to cache timeout for debounce
+    - muteStateDebounceDelay used to set the timeout delay. Currently set 350ms
+- Changed mutedOverviewPTZPosition value
+    - Previously hard coded in Main, no references CodecInfo.PrimaryCodec.MutedPTZ
+- Added logic to close Panels on CallDisconnect via Settings Object
+- Added logic to open Selfview on CallSuccessfull via Settings Object
+- MutedPTZ object removed from Initialization payload for sendToNodes function
+    - Individual values now available in RollAssignment object
+    - All devices can now have a custom config for the PTZ value here
+- Changed Error Logging
+    - Line Reference replaced by error Code
+    - Line reference was hard codec an misleading, causing confusion
+- Fixed Everyone Activity references
+    - Were accessing Speaker path, when Everyone should have been the path, causing a break when switching modes
+- Change to composeCamera function parameters
+    - Original Parameters (isDefault, ...connectorIds)
+    - isDefault replaces with options. Options now contains properties {isDefault: boolean, Cause: String}
+        - Maintains isDefault logic
+        - adds a Cause string, to understand why this was called
+	- easier to expand
+    - References updated to match and cause information added
+- Added 500ms delay in compose camera function
+    - This allows process in the function to finish before issuing the camera composition
+    - workaround for xCommand Cameras SpeakerTrack BackgroundMode Deactivate
+
+#### Campfire_2_Config
+- Added Properties
+    - Settings.RoomTypeSettings.Camera.UserInterface.SelfviewOnCallConnect: boolean
+	- If true, will enable selfview when a call is successful
+        - Default Value: false
+    - Settings.RoomTypeSettings.Camera.UserInterface.ClosePanelOnCallDisconnect: boolean
+        - If true, closes custom panels when a call disconnects
+    - MutedPTZ Value for each codec
+        - CodecInfo.PrimaryCodec.MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
+        - CodecInfo.NodeCodecs[N].MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
+        - Allows you to fine tune the MutePTZ Position for the Quad Camera
+
+#### Campfire_Node
+- Addressed changes to MutedPTZ for node codecs
+    - Correctly capture it's own PTZ information
+    - If not found, then uses original value { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
+
+#### Campfire_3_Initialization
+- Updated Version Number
+
+#### GMM_Lite_Lib
+- Increased GMM.DevAssets.maxPayloadSize from 1024 to 8192
+    - Accommodates space increase available now for xCommand Message Send
+
+### Migrate from version 1.0.0/1.0.1 to 1.0.2
+
+1. Backup all systems involved with your campfire deployment
+    - This is so you can revert to the previous version should you need to
+2. Start with the Node Codecs first
+    - Deactivate the Campfire_Node Macro
+    - Replace the Campfire_Node Macro with updated script, save
+    - Replace the GMM_Lite_Lib Macro with updated script, save
+    - Activate the Campfire_Node Macro
+3. Move to the Primary Codec
+    - Deactivate Campfire_1_Main
+    - Replace the Campfire_Node Macro with updated script, save
+    - Add the following Properties to Campfire_2_Config
+        - Settings.RoomTypeSettings.Camera.UserInterface.SelfviewOnCallConnect: false
+        - Settings.RoomTypeSettings.Camera.UserInterface.ClosePanelOnCallDisconnect: false
+        - CodecInfo.PrimaryCodec.MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
+        - CodecInfo.NodeCodecs[N].MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
+        - Option 1 - Manual Addition of Properties (Recommended)
+             - To avoid reconfiguring your Campfire_2_Config Macro, you can add the above values into your config manually
+             - Click on the Vidcast hyperlink below to see a tutorial on how to add those properties
+             - [Update Config Properties for v1.0.2 Tutorial Video](https://app.vidcast.io/share/9ec1c8bb-dbaa-4fbf-9137-d84e5c2db223)
+        - Option 2 - Reconfigure Campfire_2_Config
+             - Alternatively you can purge your campfire config and re-enter your configuration
+             - Replace the Campfire_2_Config Macro with updated script, save
+             - Reference the Campfire_2_Config Macro in your Primary Codec Pro backup from Step 1
+                 - Use values found in this backup to re-populate this new Campfire_2_Config Macro
+                 - Then assign values to the new properties introduced
+
+### Release 1.0.1
+
+#### Changes
+- Campfire_1_Main
+  - Merged Muted and MutedPTZ arguments into single command to send to Node Codecs
+    - Reduces HTTP Calls out of the Primary
+  - Fixed issues with Unmuted Microphones and Restring Camera Mode
+  - Implemented toLowerCase prototype on setSpeakerTrack function's mode parameter
+  - Merged Conversation and Speaker cases for setSpeakerTrack function
+  - Applied PTZ positioning fix for muted mode on setSpeakerTrack function
+  - Removed unnecessary comments
+- Campfire_2_Config
+  - No Changes
+- Campfire_3_Initialization
+  - Removed unused Delay Function
+  - Implemented Version number in Init Process - Printed to Console
+- Campfire_Node
+  - Added safeToLowerCase prototype
+  - runCameraMode function renamed to setSpeakerTrack to match Campfire_Main
+  - Implemented same changes to setSpeakerTrack in Campfire_Node as was done in Campfire_Main
+  - Removed MutedPTZ case in favor of merged muted behavior implemented in Campfire_Main
+
+### Release 1.0.0
+- Initial Release of Campfire
 
 - - -
 
@@ -129,7 +248,7 @@ The challenge that needed solving was to enable speaker tracking in all side of 
 
 [![Furniture TopView](/images/campfire-furniture-topview.png)](#)
 
-- Note the privacy panels in the front of each table. Whereas the Quadcamera is mounted in a format outside it's normal deployment, the camera will have visibility under each table. So it's important to source tables with a privacy panel in the front or at least a table cloth.
+- Note the privacy panels in the front of each table. Whereas the Quad Camera is mounted in a format outside it's normal deployment, the camera will have visibility under each table. So it's important to source tables with a privacy panel in the front or at least a table cloth.
 
 [![Furniture SideView](/images/campfire-furniture-sideview.png)](#)
 
@@ -149,7 +268,7 @@ The challenge that needed solving was to enable speaker tracking in all side of 
 |----------------------------|-----|---------------------------------------------|-----|
 | Codec Pro (Primary Codec)  | x1  | 50" Display                                 | x8  |
 | Codec EQ (Node Codec)      | x3  | HDMI Distribution Amplifier (HDMI Splitter) | x2  |
-| Quadcamera                 | x4  | POE Switch (16 Port Minimum)                | x1  |
+| Quad Camera                 | x4  | POE Switch (16 Port Minimum)                | x1  |
 | Table Microphone Pro       | x8  | Custom Furniture                            | x1  |
 | Room Navigator             | x1  | Installation and Configuration              | x1  |
 
@@ -173,9 +292,9 @@ The challenge that needed solving was to enable speaker tracking in all side of 
 
 ### Video Input Connections
 
-- HDMI Input 1 on the Codec Pro connects to the Primary Codec's own Quadcamera
+- HDMI Input 1 on the Codec Pro connects to the Primary Codec's own Quad Camera
 - HDMI Inputs 2-4 on the Codec Pro take in the HDMI Output signal of the Codec EQ's HDMI Output 1
-  - Each Node Quadcamera's Video Output signal is feed into their respective Node Codec EQ HDMI Input 1
+  - Each Node Quad Camera's Video Output signal is feed into their respective Node Codec EQ HDMI Input 1
 - HDMI Input 5 is reserved for Laptop Connections
   - It may be worthwhile to integrate a 4x1 HDMI switcher, in order to place a Laptop Connection on all 4 tables
   - Keep in mind, these devices also support wireless sharing via Webex Proximity Services, Airplay and Miracast too, so it may not be necessary
@@ -187,21 +306,21 @@ The challenge that needed solving was to enable speaker tracking in all side of 
 
 - All 4 Codecs should connect to the customer Lan for Management and Updates
 - Primary Codec Pro
-  - Connect the Ethernet Control line of the Primary Codec Pro's Quadcamera to the first Link Local Port of the Primary Codec Pro
+  - Connect the Ethernet Control line of the Primary Codec Pro's Quad Camera to the first Link Local Port of the Primary Codec Pro
   - Connect the POE switch to the second Link Local Port of the Primary Codec Pro
     - Connect all 8 Table Microphone Pros to the POE Switch
     - You may connect additional Table Navigators and/or PTZ Camera Control lines to this switch if modifying the solution design
   - Connect the Room Navigator to the fourth Link Local Port of the Primary Codec Pro
     - You may also connect this to the POE switch for simplicity
 - Node Codec EQ
-  - For each Node Codec EQ, Connect the Ethernet Control line of the Node Codec EQ's Quadcamera to the first Link Local Port of the respective Node Codec EQ
+  - For each Node Codec EQ, Connect the Ethernet Control line of the Node Codec EQ's Quad Camera to the first Link Local Port of the respective Node Codec EQ
 
 [![Network Connections](/images/campfire_connections_network.png)](#)
 
 ### Audio Output Connections
 
-- The Primary Quadcamera will receive audio over ARC
-- All other Quadcameras must have a Euroblock to TRS 3.5mm connection
+- The Primary Quad Camera will receive audio over ARC
+- All other Quad Cameras must have a Euroblock to TRS 3.5mm connection
   - All Audio passes though the Primary Codec Pro, do not connect any Audio via the Node Codecs
 
 [![Audio Output Connections](/images/campfire_connections_audioOut.png)](#)
@@ -315,6 +434,8 @@ const Settings = {
       Camera: {
         UserInterface: {
           Visibility: 'Auto',               // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show/Hide the Campfire Controls UserInterface
+          SelfviewOnCallConnect: false,     // DefaultValue: false || AcceptedValues: Boolean || Description: Show Selfview tile on Call Connect.
+          ClosePanelOnCallDisconnect: false // DefaultValue: false || AcceptedValues: Boolean || Closes Custom Panels on Call Disconnect. Can Impact non-campfire panels
         },
         Default_Overview: {
           Mode: 'Auto',                     // DefaultValue: 'Auto' || AcceptedValues: <'On', 'Off', 'Auto'> || Description: Set a Default Camera view when the room falls silent. On: Applies Composition, Off: Does Nothing, Auto: Use PeopleCount Data to determine the composition
@@ -324,7 +445,7 @@ const Settings = {
           }
         },
         Mode: {
-          Default: 'Speaker',               // DefaultValue: 'Speaker' || AcceptedValues: <'Speaker', 'Everyone', 'Conversation'> || Description: Set the default Camera Behavior. Speaker: Composes last active camera, Conversation: Composes all Active Audio Zones, Everyone: composes all 4 quadcameras using frames
+          Default: 'Speaker',               // DefaultValue: 'Speaker' || AcceptedValues: <'Speaker', 'Everyone', 'Conversation'> || Description: Set the default Camera Behavior. Speaker: Composes last active camera, Conversation: Composes all Active Audio Zones, Everyone: composes all 4 Quad Cameras using frames
           Speaker: {
             TransitionTimeout: {
               OnJoin: 2500                  // DefaultValue: 2500 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
@@ -466,11 +587,17 @@ const CodecInfo = {
   },
   PrimaryCodec: {
     Label: 'North',                      // DefaultValue: String || AcceptedValue: String || Description: Provide a label for your Primary Codec
-    PrimaryCodec_QuadCamera_Id: '1',          // DefaultValue: 1 || AcceptedValue: Integer || Description: Provide the CameraId configured to the quadcamera connected to the Primary Codec
+    PrimaryCodec_QuadCamera_Id: '1',          // DefaultValue: 1 || AcceptedValue: Integer || Description: Provide the CameraId configured to the Quad Camera connected to the Primary Codec
     CodecSerialNumber: '0000000000',          // DefaultValue: String || AcceptedValue: String || Description: Provide the Serial Number of the Primary Codec
     Authentication: {
       Username: 'admin',                      // DefaultValue: String || AcceptedValue: String || Description: Username for the Primary Codec, used for node communication the primary
       Passcode: ''                            // DefaultValue: String || AcceptedValue: String || Description: Passcode for the Primary Codec, used for node communication the primary
+    },
+    MutedPTZ: {                               // DefaultValue: Object { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' } || AcceptedValue: Object {Pan: Integer, Tilt: Integer, Zoom: Integer, Lens: 'String'} || Sets the PTZ Value for the Quad Camera of the Node Codec when the room it muted
+      Pan: -39,                               // Grab these values using 
+      Tilt: -492,
+      Zoom: 8210,
+      Lens: 'Wide'
     }
   },
   NodeCodecs: [
@@ -482,7 +609,8 @@ const CodecInfo = {
       Authentication: {           
         Username: 'admin',                    // DefaultValue: String || AcceptedValue: String || Description: If CodecInfo.Authentication.Mode is set to Independent, assign the username for this Node Codec
         Passcode: ''                          // DefaultValue: String || AcceptedValue: String || Description: If CodecInfo.Authentication.Mode is set to Independent, assign the passcode for this Node Codec
-      }
+      },
+      MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }  // DefaultValue: Object {Pan: '', Tilt:'', Zoom:''} || AcceptedValue: Object {Pan: Integer, Tilt: Integer, Zoom: Integer, Lens: 'String} || Sets the PTZ Value for the Quad Camera of the Node Codec when the room it muted
     },
     // For the remaining Node Codecs, follow the same format as above
     {
@@ -490,14 +618,16 @@ const CodecInfo = {
       PrimaryCodec_QuadCamera_Id: '3',         
       CodecSerialNumber: '0000000000',         
       IpAddress: '10.X.X.X',                  
-      Authentication: { Username: 'admin', Passcode: '' }
+      Authentication: { Username: 'admin', Passcode: '' },
+      MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
     },
     {
       Label: 'West',
       PrimaryCodec_QuadCamera_Id: '4',
       CodecSerialNumber: '0000000000',
       IpAddress: '10.X.X.X',
-      Authentication: { Username: 'admin', Passcode: '' }
+      Authentication: { Username: 'admin', Passcode: '' },
+      MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
     }
   ]
 }
@@ -554,7 +684,7 @@ const CodecInfo = {
 
 #### CodecInfo.PrimaryCodec.PrimaryCodec_QuadCamera_Id
 
-> Description: This tells the Campfire Blueprint Macro which HDMI Input connector the Quadcamera of the Primary Codec is plugged into. 
+> Description: This tells the Campfire Blueprint Macro which HDMI Input connector the Quad Camera of the Primary Codec is plugged into. 
 
 - **Default Value**: 1
 - **Accepted Values**: Any non-negative whole integer
@@ -678,7 +808,8 @@ const AudioMap = {
       Mode: 'On',               // DefaultValue: 'On' || AcceptedValue: <'On', 'Off'> || Description: On: Enable Global Audio Thresholds for All Audio Zones; Off: Enable Independent Audio Thresholds for All Audio Zones
       High: 25,                 // DefaultValue: 35   || AcceptedValue: 1-60          || Description: Set the High Global Threshold
       Low: 15                   // DefaultValue: 20   || AcceptedValue: 1-60          || Description: Set the High Global Threshold
-    }
+    },
+    VoiceActivityDetection: 'On'
   },
   Zones: [                      // Description: The Zones node allows you to define one or more audio zones for the AZM Automation. This is an array.
     /*
@@ -902,8 +1033,8 @@ Stay Tuned
 ### Will Campfire work on a Codec Pro running as a Microsoft Teams Room (MTR)?
 - As of January 2024, no, there is an API limitation in the Macro Code. This API limitation stops the campfire solution from operating.
 
-### Can I use the Room Bar or the Room Bar Pro as the camera, instead of a Codec with a Quadcamera
-- The Campfire blueprint in it's current state, is outlined to use all Quadcameras
+### Can I use the Room Bar or the Room Bar Pro as the camera, instead of a Codec with a Quad Camera
+- The Campfire blueprint in it's current state, is outlined to use all Quad Cameras
 - If your space is uniquely different, the Room Bar/RoomBar Pro can be used, but the Macros will need to be altered to suit that build.
   - Not impossible, but may need a little extra TLC to get going
 

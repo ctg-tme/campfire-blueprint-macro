@@ -99,7 +99,11 @@ async function updatePrimaryInfo(info) {
 }
 
 async function saveMutedPTZ(ptz) {
-  await GMM.write('mutedOverviewPTZPosition', ptz);
+  const serial = await xapi.Status.SystemUnit.Hardware.Module.SerialNumber.get();
+
+  const findDeviceBySerial = ptz.find(item => item.CodecSerialNumber === serial);
+
+  await GMM.write('mutedOverviewPTZPosition', findDeviceBySerial.MutedPTZ ?? { "Pan": -39, "Tilt": -492, "Zoom": 8210, "Lens": "Wide" });
   console.info({ Campfire_Node_Info: `PTZ Position when muted Updated` });
   mutedOverviewPTZPosition.CameraId = await findQuadConnectorId();
 }
@@ -174,15 +178,16 @@ GMM.Event.Receiver.on(async event => {
         let payload = atob(event.Value.Data)
         payload = JSON.parse(payload)
         if (payload.StandbyStatus.toLowerCase() == 'off') { xapi.Command.Standby.Deactivate(); } else { xapi.Command.Standby.Activate(); };
-        updateNodeLabel(payload.RollAssignment, event.Source.Id);
-        setSpeakerTrack(payload.CameraMode);
+        await updateNodeLabel(payload.RollAssignment, event.Source.Id);
+        await setSpeakerTrack(payload.CameraMode);
         console.log({ Campfire_Node_Log: `Initialization Payload Received`, CameraMode: payload.CameraMode, StandbyStatus: payload.StandbyStatus, RollAssignment: 'Node' });
-        saveMutedPTZ(payload.MutedPTZ);
+        await saveMutedPTZ(payload.RollAssignment);
+        console.warn(payload.RollAssignment);
         delete payload.StandbyStatus;
         delete payload.RollAssignment;
         delete payload.CameraMode;
         delete payload.MutedPTZ;
-        updatePrimaryInfo(btoa(JSON.stringify(payload)));
+        await updatePrimaryInfo(btoa(JSON.stringify(payload)));
         break;
       case 'RollAssignment':
         updateNodeLabel(event.Value.Data, event.Source.Id)

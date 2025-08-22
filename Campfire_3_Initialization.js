@@ -19,7 +19,7 @@ import { Settings, CodecInfo } from './Campfire_2_Config';
 import { GMM } from './GMM_Lite_Lib';
 
 const DevConfig = {
-  Version: '1-0-1'
+  Version: '1-0-2'
 }
 
 /********************************

@@ -21,6 +21,8 @@ const Settings = {
       Camera: {
         UserInterface: {
           Visibility: 'Auto',               // DefaultValue: 'Auto' || AcceptedValues: <'Auto', 'Hidden'> || Description: Show/Hide the Campfire Controls UserInterface
+          SelfviewOnCallConnect: false,     // DefaultValue: false || AcceptedValues: Boolean || Description: Show Selfview tile on Call Connect.
+          ClosePanelOnCallDisconnect: false // DefaultValue: false || AcceptedValues: Boolean || Closes Custom Panels on Call Disconnect. Can Impact non-campfire panels
         },
         Default_Overview: {
           Mode: 'Auto',                     // DefaultValue: 'Auto' || AcceptedValues: <'On', 'Off', 'Auto'> || Description: Set a Default Camera view when the room falls silent. On: Applies Composition, Off: Does Nothing, Auto: Use PeopleCount Data to determine the composition
@@ -30,7 +32,7 @@ const Settings = {
           }
         },
         Mode: {
-          Default: 'Speaker',               // DefaultValue: 'Speaker' || AcceptedValues: <'Speaker', 'Everyone', 'Conversation'> || Description: Set the default Camera Behavior. Speaker: Composes last active camera, Conversation: Composes all Active Audio Zones, Everyone: composes all 4 quadcameras using frames
+          Default: 'Speaker',               // DefaultValue: 'Speaker' || AcceptedValues: <'Speaker', 'Everyone', 'Conversation'> || Description: Set the default Camera Behavior. Speaker: Composes last active camera, Conversation: Composes all Active Audio Zones, Everyone: composes all 4 Quad Cameras using frames
           Speaker: {
             TransitionTimeout: {
               OnJoin: 2500                  // DefaultValue: 2500 || AcceptedValues: Integer in Milliseconds || Description: Define define how long to wait before allowing a new Camera to come into Speaker
@@ -56,12 +58,18 @@ const CodecInfo = {
     Common_Passcode: ''                       // DefaultValue: String || AcceptedValues: String || Description: The passcode shared across all node codecs. Only accessed when the Mode is set to Common
   },
   PrimaryCodec: {
-    Label: 'North',                      // DefaultValue: String || AcceptedValue: String || Description: Provide a label for your Primary Codec
-    PrimaryCodec_QuadCamera_ConnectorId: '1',          // DefaultValue: 1 || AcceptedValue: Integer || Description: Provide the CameraId configured to the quadcamera connected to the Primary Codec
+    Label: 'North',                           // DefaultValue: String || AcceptedValue: String || Description: Provide a label for your Primary Codec
+    PrimaryCodec_QuadCamera_ConnectorId: '1', // DefaultValue: 1 || AcceptedValue: Integer || Description: Provide the CameraId configured to the Quad Camera connected to the Primary Codec
     CodecSerialNumber: '0000000000',          // DefaultValue: String || AcceptedValue: String || Description: Provide the Serial Number of the Primary Codec
     Authentication: {
       Username: 'admin',                      // DefaultValue: String || AcceptedValue: String || Description: Username for the Primary Codec, used for node communication the primary
       Passcode: ''                            // DefaultValue: String || AcceptedValue: String || Description: Passcode for the Primary Codec, used for node communication the primary
+    },
+    MutedPTZ: {                               // DefaultValue: Object { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' } || AcceptedValue: Object {Pan: Integer, Tilt: Integer, Zoom: Integer, Lens: 'String'} || Sets the PTZ Value for the Quad Camera of the Node Codec when the room it muted
+      Pan: -39,                               // Grab these values using 
+      Tilt: -492,
+      Zoom: 8210,
+      Lens: 'Wide'
     }
   },
   NodeCodecs: [
@@ -70,25 +78,28 @@ const CodecInfo = {
       PrimaryCodec_QuadCamera_ConnectorId: '2',        // DefaultValue: 1 || AcceptedValue: Integer || Description: Provide the CameraId configured on the Primary Codec this Node Codec's HDMI output is connected to
       CodecSerialNumber: '0000000000',        // DefaultValue: String || AcceptedValue: String || Description: Provide the Serial Number of the Node Codec
       IpAddress: '10.X.X.X',                  // DefaultValue: String || AcceptedValue: String || Description: Provide the IP Address of the Node Codec
-      Authentication: {           
+      Authentication: {
         Username: 'admin',                    // DefaultValue: String || AcceptedValue: String || Description: If CodecInfo.Authentication.Mode is set to Independent, assign the username for this Node Codec
         Passcode: ''                          // DefaultValue: String || AcceptedValue: String || Description: If CodecInfo.Authentication.Mode is set to Independent, assign the passcode for this Node Codec
-      }
+      },
+      MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }  // DefaultValue: Object {Pan: '', Tilt:'', Zoom:''} || AcceptedValue: Object {Pan: Integer, Tilt: Integer, Zoom: Integer, Lens: 'String} || Sets the PTZ Value for the Quad Camera of the Node Codec when the room it muted
     },
     // For the remaining Node Codecs, follow the same format as above
     {
-      Label: 'South',                            
-      PrimaryCodec_QuadCamera_ConnectorId: '3',         
-      CodecSerialNumber: '0000000000',         
-      IpAddress: '10.X.X.X',                  
-      Authentication: { Username: 'admin', Passcode: '' }
+      Label: 'South',
+      PrimaryCodec_QuadCamera_ConnectorId: '3',
+      CodecSerialNumber: '0000000000',
+      IpAddress: '10.X.X.X',
+      Authentication: { Username: 'admin', Passcode: '' },
+      MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
     },
     {
       Label: 'West',
       PrimaryCodec_QuadCamera_ConnectorId: '4',
       CodecSerialNumber: '0000000000',
       IpAddress: '10.X.X.X',
-      Authentication: { Username: 'admin', Passcode: '' }
+      Authentication: { Username: 'admin', Passcode: '' },
+      MutedPTZ: { Pan: -39, Tilt: -492, Zoom: 8210, Lens: 'Wide' }
     }
   ]
 }
@@ -103,7 +114,8 @@ const AudioMap = {
       Mode: 'On',               // DefaultValue: 'On' || AcceptedValue: <'On', 'Off'> || Description: On: Enable Global Audio Thresholds for All Audio Zones; Off: Enable Independent Audio Thresholds for All Audio Zones
       High: 25,                 // DefaultValue: 35   || AcceptedValue: 1-60          || Description: Set the High Global Threshold
       Low: 15                   // DefaultValue: 20   || AcceptedValue: 1-60          || Description: Set the High Global Threshold
-    }
+    },
+    VoiceActivityDetection: 'On'
   },
   Zones: [                      // Description: The Zones node allows you to define one or more audio zones for the AZM Automation. This is an array.
     {
